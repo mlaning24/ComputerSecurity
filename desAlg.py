@@ -1,6 +1,3 @@
-# DES Decryption with Detailed Steps, Key Highlights, and Full S-Boxes
-
-# Permutation tables and shift schedules
 KEY_PERM_1 = [57, 49, 41, 33, 25, 17, 9, 1, 58, 50, 42, 34, 26, 18, 
               10, 2, 59, 51, 43, 35, 27, 19, 11, 3, 60, 52, 44, 36, 
               63, 55, 47, 39, 31, 23, 15, 7, 62, 54, 46, 38, 30, 22, 
@@ -14,7 +11,6 @@ KEY_PERM_2 = [14, 17, 11, 24, 1, 5, 3, 28, 15, 6, 21, 10,
 SHIFT_ROTATIONS = [1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1]
 
 S_BOXES = [
-    #S1
     [
         [14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7],
         [0, 15, 7, 4, 14, 2, 13, 1, 10, 6, 12, 11, 9, 5, 3, 8],
@@ -99,12 +95,11 @@ PERMUTATION_P = [
     19, 13, 30, 6, 22, 11, 4, 25
 ]
 
-# Round Keys and Intermediate Values
 subkeys = []
 C = []
 D = []
 
-# Helper Functions
+
 def permute(bits, table):
     return ''.join(bits[i - 1] for i in table)
 
@@ -114,7 +109,7 @@ def rotate_left(bits, shifts):
 def xor_bits(bits1, bits2):
     return ''.join(str(int(b1) ^ int(b2)) for b1, b2 in zip(bits1, bits2))
 
-# S-Box Substitution
+
 def sbox_substitute(bits):
     output = ''
     for i in range(0, 48, 6):
@@ -130,10 +125,11 @@ def feistel(right, subkey):
     xored = xor_bits(expanded, subkey)
     substituted = sbox_substitute(xored)
     permuted = permute(substituted, PERMUTATION_P)
+    # Results of F function 
     print(f"Feistel -> Expanded: {expanded}, XORed: {xored}, Substituted: {substituted}, Permuted: {permuted}")
     return permuted
 
-# Key Schedule Generation
+
 def generate_subkeys(master_key):
     key_56 = permute(master_key, KEY_PERM_1)
     left_half = key_56[:28]
@@ -151,11 +147,9 @@ def generate_subkeys(master_key):
         subkey = permute(combined, KEY_PERM_2)
         subkeys.append(subkey)
 
-        # Debug: Display Subkeys
+        
         print(f"Round {i+1} Subkey: {subkey}")
 
-
-# Convert Binary to Text
 def binary_to_text(binary_str):
     text = ''
     for i in range(0, len(binary_str), 8):
@@ -166,9 +160,13 @@ def binary_to_text(binary_str):
 # DES Decryption
 def des_decrypt(key, ciphertext):
     generate_subkeys(key)
+
+    #Initial Permutation 
     permuted = permute(ciphertext, INIT_PERM)
     left, right = permuted[:32], permuted[32:]
 
+
+    # 16 rounds of processing 
     for i in range(15, -1, -1):
         round_key = subkeys[i]
         f_output = feistel(right, round_key)
@@ -177,14 +175,15 @@ def des_decrypt(key, ciphertext):
         right = new_right
         print(f"Round {16-i}: L = {left}, R = {right}, f_output = {f_output}")
 
+    # Final permutation 
     combined = right + left
     decrypted_binary = permute(combined, FINAL_PERM)
     decrypted_text = binary_to_text(decrypted_binary)
     print(f"Decrypted Text: {decrypted_text}")
 
-# Inputs
+
 key = "0100110001001111010101100100010101000011010100110100111001000100"
 ciphertext = "1100101011101101101000100110010101011111101101110011100001110011"
 
-# Run decryption
+
 des_decrypt(key, ciphertext)
